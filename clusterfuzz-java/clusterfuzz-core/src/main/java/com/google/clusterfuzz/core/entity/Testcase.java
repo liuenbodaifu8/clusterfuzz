@@ -28,10 +28,15 @@ import java.util.Objects;
     @Index(name = "idx_testcase_group_id", columnList = "groupId"),
     @Index(name = "idx_testcase_is_leader", columnList = "isLeader"),
     @Index(name = "idx_testcase_has_bug_flag", columnList = "hasBugFlag"),
-    @Index(name = "idx_testcase_timestamp", columnList = "timestamp")
+    @Index(name = "idx_testcase_timestamp", columnList = "timestamp"),
+    @Index(name = "idx_testcase_crash_type_status", columnList = "crashType,status"),
+    @Index(name = "idx_testcase_created_at", columnList = "createdAt"),
+    @Index(name = "idx_testcase_updated_at", columnList = "updatedAt")
 })
 @EntityListeners(AuditingEntityListener.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Cacheable
+@org.hibernate.annotations.Cache(usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE)
 public class Testcase {
 
     @Id
