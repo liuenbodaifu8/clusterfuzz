@@ -39,14 +39,14 @@ Day 5-7: Create detailed API specifications for all modules
 **Week 2: Java Architecture Design (AI-Generated)**
 ```
 clusterfuzz-java/
-├── clusterfuzz-core/           # Generated: 50+ domain models
-├── clusterfuzz-web/            # Generated: Complete REST API
-├── clusterfuzz-bot/            # Generated: Worker framework
-├── clusterfuzz-analysis/       # Generated: Analysis algorithms
-├── clusterfuzz-fuzzing/        # Generated: Engine integrations
-├── clusterfuzz-platform/       # Generated: Multi-platform support
-├── clusterfuzz-integration/    # Generated: External APIs
-└── clusterfuzz-deployment/     # Generated: K8s manifests
+├── clusterfuzz-core/           # Target: 50+ domain models
+├── clusterfuzz-web/            # Target: Complete REST API
+├── clusterfuzz-bot/            # Target: Worker framework
+├── clusterfuzz-analysis/       # Target: Analysis algorithms
+├── clusterfuzz-fuzzing/        # Target: Engine integrations
+├── clusterfuzz-platform/       # Target: Multi-platform support
+├── clusterfuzz-integration/    # Target: External APIs
+└── clusterfuzz-deployment/     # Target: K8s manifests
 ```
 
 **Week 3-4: Infrastructure & Core Models (AI-Generated)**
