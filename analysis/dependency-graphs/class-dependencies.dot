@@ -1,0 +1,155 @@
+// ClusterFuzz Class-Level Dependency Graph
+// Generated for Java Spring Boot Architecture
+// Use: dot -Tpng class-dependencies.dot -o class-dependencies.png
+
+digraph ClusterFuzzClasses {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=8];
+
+    // Core Entities
+    subgraph cluster_entities {
+        label="Core Entities";
+        style=filled;
+        color=lightgreen;
+        
+        Testcase [label="Testcase\n(id, crashType, status)", fillcolor=lightgreen];
+        Job [label="Job\n(name, platform, enabled)", fillcolor=lightgreen];
+        Bot [label="Bot\n(name, platform, status)", fillcolor=lightgreen];
+        Fuzzer [label="Fuzzer\n(name, engine, config)", fillcolor=lightgreen];
+        CrashResult [label="CrashResult\n(stacktrace, severity)", fillcolor=lightgreen];
+        Coverage [label="Coverage\n(functions, lines)", fillcolor=lightgreen];
+        Issue [label="Issue\n(trackerId, status)", fillcolor=lightgreen];
+        BuildInfo [label="BuildInfo\n(revision, timestamp)", fillcolor=lightgreen];
+    }
+
+    // Repositories
+    subgraph cluster_repositories {
+        label="Repository Layer";
+        style=filled;
+        color=lightblue;
+        
+        TestcaseRepository [label="TestcaseRepository\n(JPA Repository)", fillcolor=lightblue];
+        JobRepository [label="JobRepository\n(JPA Repository)", fillcolor=lightblue];
+        BotRepository [label="BotRepository\n(JPA Repository)", fillcolor=lightblue];
+        FuzzerRepository [label="FuzzerRepository\n(JPA Repository)", fillcolor=lightblue];
+        CrashResultRepository [label="CrashResultRepository\n(JPA Repository)", fillcolor=lightblue];
+    }
+
+    // Services
+    subgraph cluster_services {
+        label="Service Layer";
+        style=filled;
+        color=lightyellow;
+        
+        TestcaseService [label="TestcaseService\n(Business Logic)", fillcolor=lightyellow];
+        JobService [label="JobService\n(Job Management)", fillcolor=lightyellow];
+        BotService [label="BotService\n(Bot Coordination)", fillcolor=lightyellow];
+        FuzzerService [label="FuzzerService\n(Fuzzer Management)", fillcolor=lightyellow];
+        AuthenticationService [label="AuthenticationService\n(JWT, OAuth2)", fillcolor=lightyellow];
+        JwtService [label="JwtService\n(Token Management)", fillcolor=lightyellow];
+    }
+
+    // Controllers
+    subgraph cluster_controllers {
+        label="Controller Layer";
+        style=filled;
+        color=lightcyan;
+        
+        TestcaseController [label="TestcaseController\n(REST API)", fillcolor=lightcyan];
+        JobController [label="JobController\n(REST API)", fillcolor=lightcyan];
+        BotController [label="BotController\n(REST API)", fillcolor=lightcyan];
+        FuzzerController [label="FuzzerController\n(REST API)", fillcolor=lightcyan];
+        AuthController [label="AuthController\n(Authentication)", fillcolor=lightcyan];
+        TestcaseGraphQLController [label="TestcaseGraphQLController\n(GraphQL)", fillcolor=lightcyan];
+    }
+
+    // Fuzzing Engines
+    subgraph cluster_fuzzing {
+        label="Fuzzing Layer";
+        style=filled;
+        color=orange;
+        
+        FuzzingEngine [label="FuzzingEngine\n(Interface)", fillcolor=orange];
+        LibFuzzerEngine [label="LibFuzzerEngine\n(Implementation)", fillcolor=orange];
+        AflEngine [label="AflEngine\n(Implementation)", fillcolor=orange];
+        FuzzerSelector [label="FuzzerSelector\n(Selection Logic)", fillcolor=orange];
+        CorpusManager [label="CorpusManager\n(Corpus Handling)", fillcolor=orange];
+    }
+
+    // Analysis Components
+    subgraph cluster_analysis {
+        label="Analysis Layer";
+        style=filled;
+        color=lightpink;
+        
+        CrashAnalyzer [label="CrashAnalyzer\n(Main Analyzer)", fillcolor=lightpink];
+        StackAnalyzer [label="StackAnalyzer\n(Stack Processing)", fillcolor=lightpink];
+        SeverityAnalyzer [label="SeverityAnalyzer\n(Risk Assessment)", fillcolor=lightpink];
+        CrashComparer [label="CrashComparer\n(Deduplication)", fillcolor=lightpink];
+    }
+
+    // Entity Relationships
+    Testcase -> Job [label="belongsTo", color=green];
+    Testcase -> Bot [label="processedBy", color=green];
+    Testcase -> Fuzzer [label="foundBy", color=green];
+    Testcase -> CrashResult [label="has", color=green];
+    Testcase -> Issue [label="linkedTo", color=green];
+    Job -> Fuzzer [label="uses", color=green];
+    Job -> BuildInfo [label="targets", color=green];
+    Bot -> Job [label="executes", color=green];
+
+    // Repository Dependencies
+    TestcaseRepository -> Testcase [label="manages", color=blue];
+    JobRepository -> Job [label="manages", color=blue];
+    BotRepository -> Bot [label="manages", color=blue];
+    FuzzerRepository -> Fuzzer [label="manages", color=blue];
+    CrashResultRepository -> CrashResult [label="manages", color=blue];
+
+    // Service Dependencies
+    TestcaseService -> TestcaseRepository [label="uses", color=red, penwidth=2];
+    JobService -> JobRepository [label="uses", color=red, penwidth=2];
+    BotService -> BotRepository [label="uses", color=red, penwidth=2];
+    FuzzerService -> FuzzerRepository [label="uses", color=red, penwidth=2];
+    AuthenticationService -> JwtService [label="uses", color=red, penwidth=2];
+
+    // Controller Dependencies
+    TestcaseController -> TestcaseService [label="uses", color=red, penwidth=2];
+    JobController -> JobService [label="uses", color=red, penwidth=2];
+    BotController -> BotService [label="uses", color=red, penwidth=2];
+    FuzzerController -> FuzzerService [label="uses", color=red, penwidth=2];
+    AuthController -> AuthenticationService [label="uses", color=red, penwidth=2];
+    TestcaseGraphQLController -> TestcaseService [label="uses", color=red, penwidth=2];
+
+    // Cross-layer Dependencies
+    TestcaseService -> CrashAnalyzer [label="analyzes", color=purple, style=dashed];
+    BotService -> FuzzerSelector [label="selects", color=purple, style=dashed];
+    FuzzerService -> FuzzingEngine [label="manages", color=purple, style=dashed];
+
+    // Fuzzing Engine Relationships
+    LibFuzzerEngine -> FuzzingEngine [label="implements", color=orange];
+    AflEngine -> FuzzingEngine [label="implements", color=orange];
+    FuzzerSelector -> FuzzingEngine [label="selects", color=orange];
+    FuzzingEngine -> CorpusManager [label="uses", color=orange];
+
+    // Analysis Relationships
+    CrashAnalyzer -> StackAnalyzer [label="uses", color=pink];
+    CrashAnalyzer -> SeverityAnalyzer [label="uses", color=pink];
+    CrashAnalyzer -> CrashComparer [label="uses", color=pink];
+    CrashAnalyzer -> CrashResult [label="produces", color=pink];
+
+    // Configuration Dependencies
+    subgraph cluster_config {
+        label="Configuration";
+        style=filled;
+        color=lightgray;
+        
+        ClusterFuzzConfigurationProperties [label="ClusterFuzzConfigurationProperties\n(200+ Parameters)", fillcolor=lightgray];
+    }
+
+    // All services depend on configuration
+    TestcaseService -> ClusterFuzzConfigurationProperties [label="configures", color=gray, style=dotted];
+    JobService -> ClusterFuzzConfigurationProperties [label="configures", color=gray, style=dotted];
+    BotService -> ClusterFuzzConfigurationProperties [label="configures", color=gray, style=dotted];
+    AuthenticationService -> ClusterFuzzConfigurationProperties [label="configures", color=gray, style=dotted];
+}

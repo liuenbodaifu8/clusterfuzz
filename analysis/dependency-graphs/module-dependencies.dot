@@ -1,0 +1,97 @@
+// ClusterFuzz Module Dependency Graph
+// Generated for Java Spring Boot Architecture
+// Use: dot -Tpng module-dependencies.dot -o module-dependencies.png
+
+digraph ClusterFuzzModules {
+    rankdir=TB;
+    node [shape=box, style=filled, fontname="Arial"];
+    edge [fontname="Arial", fontsize=10];
+
+    // Define node styles
+    subgraph cluster_web {
+        label="Web Layer";
+        style=filled;
+        color=lightblue;
+        
+        web [label="clusterfuzz-web\n(Controllers, REST API,\nGraphQL, Authentication)", fillcolor=lightcyan];
+    }
+
+    subgraph cluster_core {
+        label="Core Layer";
+        style=filled;
+        color=lightgreen;
+        
+        core [label="clusterfuzz-core\n(Entities, Repositories,\nServices, Business Logic)", fillcolor=lightgreen];
+    }
+
+    subgraph cluster_processing {
+        label="Processing Layer";
+        style=filled;
+        color=lightyellow;
+        
+        bot [label="clusterfuzz-bot\n(Task Execution,\nWorker Management)", fillcolor=lightyellow];
+        fuzzing [label="clusterfuzz-fuzzing\n(Fuzzing Engines,\nLibFuzzer, AFL)", fillcolor=lightyellow];
+        analysis [label="clusterfuzz-analysis\n(Crash Analysis,\nStack Parsing)", fillcolor=lightyellow];
+    }
+
+    subgraph cluster_infrastructure {
+        label="Infrastructure Layer";
+        style=filled;
+        color=lightgray;
+        
+        platform [label="clusterfuzz-platform\n(OS Abstraction,\nMulti-platform)", fillcolor=lightgray];
+        integration [label="clusterfuzz-integration\n(External APIs,\nIssue Trackers)", fillcolor=lightgray];
+        deployment [label="clusterfuzz-deployment\n(Docker, K8s,\nCI/CD)", fillcolor=lightgray];
+        benchmarks [label="clusterfuzz-benchmarks\n(Performance Testing,\nJMH Benchmarks)", fillcolor=lightgray];
+    }
+
+    // External Dependencies
+    subgraph cluster_external {
+        label="External Systems";
+        style=filled;
+        color=pink;
+        
+        database [label="PostgreSQL\n(Primary Database)", fillcolor=pink];
+        gcs [label="Google Cloud Storage\n(File Storage)", fillcolor=pink];
+        monitoring [label="Prometheus/Grafana\n(Monitoring)", fillcolor=pink];
+        issuetracker [label="GitHub/Jira\n(Issue Tracking)", fillcolor=pink];
+    }
+
+    // Primary Dependencies (Strong coupling)
+    web -> core [label="uses", color=red, penwidth=3];
+    bot -> core [label="uses", color=red, penwidth=3];
+    fuzzing -> core [label="uses", color=red, penwidth=3];
+    analysis -> core [label="uses", color=red, penwidth=3];
+
+    // Secondary Dependencies (Medium coupling)
+    web -> integration [label="integrates", color=blue, penwidth=2];
+    bot -> fuzzing [label="executes", color=blue, penwidth=2];
+    bot -> analysis [label="analyzes", color=blue, penwidth=2];
+    bot -> platform [label="runs on", color=blue, penwidth=2];
+    analysis -> fuzzing [label="processes", color=blue, penwidth=2];
+
+    // Tertiary Dependencies (Loose coupling)
+    integration -> issuetracker [label="connects", color=green, penwidth=1];
+    core -> database [label="persists", color=green, penwidth=1];
+    fuzzing -> gcs [label="stores", color=green, penwidth=1];
+    web -> monitoring [label="reports", color=green, penwidth=1];
+    benchmarks -> core [label="tests", color=green, penwidth=1, style=dashed];
+    deployment -> web [label="deploys", color=green, penwidth=1, style=dashed];
+
+    // Cross-module Dependencies
+    web -> fuzzing [label="manages", color=orange, penwidth=1, style=dotted];
+    web -> analysis [label="displays", color=orange, penwidth=1, style=dotted];
+    integration -> analysis [label="reports", color=orange, penwidth=1, style=dotted];
+
+    // Legend
+    subgraph cluster_legend {
+        label="Dependency Types";
+        style=filled;
+        color=white;
+        
+        legend1 [label="Strong Coupling", color=red, style=filled, fillcolor=white];
+        legend2 [label="Medium Coupling", color=blue, style=filled, fillcolor=white];
+        legend3 [label="Loose Coupling", color=green, style=filled, fillcolor=white];
+        legend4 [label="Cross-module", color=orange, style=filled, fillcolor=white];
+    }
+}

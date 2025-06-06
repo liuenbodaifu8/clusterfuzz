@@ -1,0 +1,786 @@
+openapi: 3.0.3
+info:
+  title: ClusterFuzz Web API
+  description: Complete REST API specification for ClusterFuzz web interface
+  version: 1.0.0
+  contact:
+    name: ClusterFuzz Team
+    url: https://github.com/google/clusterfuzz
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://clusterfuzz.example.com/api/v1
+    description: Production server
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: User logout
+      responses:
+        '200':
+          description: Logout successful
+
+  # Testcase Management
+  /testcases:
+    get:
+      tags: [Testcases]
+      summary: List testcases
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Pending, Processed, Duplicate, Invalid]
+        - name: securityFlag
+          in: query
+          schema:
+            type: boolean
+        - name: jobType
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of testcases
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestcasePageResponse'
+
+    post:
+      tags: [Testcases]
+      summary: Create new testcase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestcaseCreateRequest'
+      responses:
+        '201':
+          description: Testcase created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testcase'
+
+  /testcases/{id}:
+    get:
+      tags: [Testcases]
+      summary: Get testcase by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Testcase details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testcase'
+        '404':
+          description: Testcase not found
+
+    put:
+      tags: [Testcases]
+      summary: Update testcase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestcaseUpdateRequest'
+      responses:
+        '200':
+          description: Testcase updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Testcase'
+
+    delete:
+      tags: [Testcases]
+      summary: Delete testcase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Testcase deleted
+
+  # Job Management
+  /jobs:
+    get:
+      tags: [Jobs]
+      summary: List jobs
+      parameters:
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+        - name: platform
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+
+    post:
+      tags: [Jobs]
+      summary: Create new job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreateRequest'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+
+  /jobs/{name}:
+    get:
+      tags: [Jobs]
+      summary: Get job by name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+
+    put:
+      tags: [Jobs]
+      summary: Update job
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobUpdateRequest'
+      responses:
+        '200':
+          description: Job updated
+
+    delete:
+      tags: [Jobs]
+      summary: Delete job
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Job deleted
+
+  /jobs/{name}/start:
+    post:
+      tags: [Jobs]
+      summary: Start job
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job started
+
+  /jobs/{name}/stop:
+    post:
+      tags: [Jobs]
+      summary: Stop job
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job stopped
+
+  # Bot Management
+  /bots:
+    get:
+      tags: [Bots]
+      summary: List bots
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [IDLE, WORKING, OFFLINE, MAINTENANCE]
+        - name: platform
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of bots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bot'
+
+  /bots/{id}:
+    get:
+      tags: [Bots]
+      summary: Get bot by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Bot details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bot'
+
+  /bots/{id}/heartbeat:
+    post:
+      tags: [Bots]
+      summary: Bot heartbeat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeartbeatRequest'
+      responses:
+        '200':
+          description: Heartbeat received
+
+  # Fuzzer Management
+  /fuzzers:
+    get:
+      tags: [Fuzzers]
+      summary: List fuzzers
+      responses:
+        '200':
+          description: List of fuzzers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fuzzer'
+
+    post:
+      tags: [Fuzzers]
+      summary: Register new fuzzer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FuzzerCreateRequest'
+      responses:
+        '201':
+          description: Fuzzer registered
+
+  # Statistics and Reporting
+  /stats/crash:
+    get:
+      tags: [Statistics]
+      summary: Get crash statistics
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Crash statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrashStats'
+
+  /stats/fuzzer:
+    get:
+      tags: [Statistics]
+      summary: Get fuzzer performance statistics
+      responses:
+        '200':
+          description: Fuzzer statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FuzzerStats'
+
+  # File Management
+  /upload:
+    post:
+      tags: [Files]
+      summary: Upload file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                type:
+                  type: string
+                  enum: [testcase, corpus, binary]
+      responses:
+        '200':
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+
+  /download/{type}/{id}:
+    get:
+      tags: [Files]
+      summary: Download file
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    # Authentication Schemas
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        tokenType:
+          type: string
+          default: Bearer
+
+    # Core Entity Schemas
+    Testcase:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        filename:
+          type: string
+        jobType:
+          type: string
+        fuzzerName:
+          type: string
+        projectName:
+          type: string
+        status:
+          type: string
+          enum: [Pending, Processed, Duplicate, Invalid]
+        crashType:
+          type: string
+        crashState:
+          type: string
+        securityFlag:
+          type: boolean
+        reproducible:
+          type: boolean
+        hasMinimizedTestcase:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+        stacktrace:
+          type: string
+        comments:
+          type: string
+
+    Job:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        environment:
+          type: string
+        platform:
+          type: string
+        enabled:
+          type: boolean
+        lastModified:
+          type: string
+          format: date-time
+
+    Bot:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        platform:
+          type: string
+        version:
+          type: string
+        ipAddress:
+          type: string
+        port:
+          type: integer
+        status:
+          type: string
+          enum: [IDLE, WORKING, OFFLINE, MAINTENANCE]
+        lastHeartbeat:
+          type: string
+          format: date-time
+
+    Fuzzer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        engine:
+          type: string
+        config:
+          type: string
+        enabled:
+          type: boolean
+
+    # Request/Response Schemas
+    TestcasePageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Testcase'
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+
+    TestcaseCreateRequest:
+      type: object
+      required: [filename, jobType, fuzzerName]
+      properties:
+        filename:
+          type: string
+        jobType:
+          type: string
+        fuzzerName:
+          type: string
+        projectName:
+          type: string
+        crashType:
+          type: string
+        crashState:
+          type: string
+        securityFlag:
+          type: boolean
+          default: false
+
+    TestcaseUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        comments:
+          type: string
+        securityFlag:
+          type: boolean
+
+    JobCreateRequest:
+      type: object
+      required: [name, platform]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        platform:
+          type: string
+        environment:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+
+    JobUpdateRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        environment:
+          type: string
+        enabled:
+          type: boolean
+
+    FuzzerCreateRequest:
+      type: object
+      required: [name, engine]
+      properties:
+        name:
+          type: string
+        engine:
+          type: string
+        config:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+
+    HeartbeatRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        currentTasks:
+          type: array
+          items:
+            type: string
+        systemInfo:
+          type: object
+
+    CrashStats:
+      type: object
+      properties:
+        totalCrashes:
+          type: integer
+        securityCrashes:
+          type: integer
+        uniqueCrashes:
+          type: integer
+        crashesByDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+
+    FuzzerStats:
+      type: object
+      properties:
+        totalExecutions:
+          type: integer
+          format: int64
+        averageExecPerSec:
+          type: number
+        coveragePercentage:
+          type: number
+        crashesFound:
+          type: integer
+
+    FileUploadResponse:
+      type: object
+      properties:
+        fileKey:
+          type: string
+        fileName:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        uploadTime:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Testcases
+    description: Testcase management operations
+  - name: Jobs
+    description: Job configuration and management
+  - name: Bots
+    description: Bot registration and monitoring
+  - name: Fuzzers
+    description: Fuzzer management and configuration
+  - name: Statistics
+    description: System statistics and reporting
+  - name: Files
+    description: File upload and download operations

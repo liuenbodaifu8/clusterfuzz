@@ -1,0 +1,91 @@
+// ClusterFuzz Database Schema Dependency Graph
+// Generated for PostgreSQL with JPA/Hibernate
+// Use: dot -Tpng database-schema.dot -o database-schema.png
+
+digraph ClusterFuzzDatabase {
+    rankdir=TB;
+    node [shape=record, style=filled, fontname="Arial"];
+    edge [fontname="Arial", fontsize=10];
+
+    // Primary Entities
+    testcases [label="{testcases|id: BIGINT (PK)\lfilename: VARCHAR(255)\ljob_type: VARCHAR(100)\lfuzzer_name: VARCHAR(100)\lproject_name: VARCHAR(100)\lstatus: VARCHAR(50)\lcrash_type: VARCHAR(100)\lcrash_state: TEXT\lsecurity_flag: BOOLEAN\lreproducible: BOOLEAN\lhas_minimized_testcase: BOOLEAN\ltimestamp: TIMESTAMP\lstacktrace: TEXT\lreproducer_key: VARCHAR(255)\lminimized_keys: TEXT\lcrash_revision: INTEGER\lcomments: TEXT\lbug_information: TEXT\lgroup_bug_information: TEXT\lhas_issue_tracker: BOOLEAN\lissue_tracker_issue_id: VARCHAR(100)\l}", fillcolor=lightblue];
+
+    jobs [label="{jobs|name: VARCHAR(100) (PK)\ldescription: TEXT\lenvironment: TEXT\lplatform: VARCHAR(50)\ltemplates: TEXT\lenabled: BOOLEAN\llast_modified: TIMESTAMP\lcustom_binary: VARCHAR(255)\lcustom_binary_key: VARCHAR(255)\lcustom_binary_filename: VARCHAR(255)\lcustom_binary_revision: VARCHAR(100)\l}", fillcolor=lightgreen];
+
+    bots [label="{bots|id: BIGINT (PK)\lname: VARCHAR(100) UNIQUE\lplatform: VARCHAR(50)\lversion: VARCHAR(50)\lip_address: VARCHAR(45)\lport: INTEGER\lcpu_architecture: VARCHAR(50)\lcpu_cores: INTEGER\lmemory_mb: INTEGER\ldisk_space_mb: BIGINT\lstatus: VARCHAR(20)\llast_heartbeat: TIMESTAMP\l}", fillcolor=lightyellow];
+
+    fuzzers [label="{fuzzers|id: BIGINT (PK)\lname: VARCHAR(100) UNIQUE\lengine: VARCHAR(50)\lconfig: TEXT\lenabled: BOOLEAN\lcreated_at: TIMESTAMP\lupdated_at: TIMESTAMP\l}", fillcolor=lightcyan];
+
+    crash_results [label="{crash_results|id: BIGINT (PK)\ltestcase_id: BIGINT (FK)\lcrash_type: VARCHAR(100)\lcrash_state: TEXT\lsecurity_flag: BOOLEAN\lreproducible: BOOLEAN\lstacktrace: TEXT\lcrash_time: TIMESTAMP\lcrash_revision: INTEGER\lseverity: VARCHAR(20)\l}", fillcolor=lightpink];
+
+    coverage_info [label="{coverage_info|id: BIGINT (PK)\ljob_name: VARCHAR(100) (FK)\lrevision: VARCHAR(100)\lfunctions_covered: INTEGER\lfunctions_total: INTEGER\llines_covered: INTEGER\llines_total: INTEGER\lbranches_covered: INTEGER\lbranches_total: INTEGER\ldate: DATE\l}", fillcolor=lightgray];
+
+    issues [label="{issues|id: BIGINT (PK)\ltestcase_id: BIGINT (FK)\ltracker_id: VARCHAR(100)\lstatus: VARCHAR(50)\lpriority: VARCHAR(20)\lassignee: VARCHAR(100)\lcreated_at: TIMESTAMP\lupdated_at: TIMESTAMP\l}", fillcolor=orange];
+
+    build_info [label="{build_info|id: BIGINT (PK)\ljob_name: VARCHAR(100) (FK)\lrevision: VARCHAR(100)\ltimestamp: TIMESTAMP\lbuild_url: VARCHAR(500)\lcommit_hash: VARCHAR(40)\lbranch: VARCHAR(100)\l}", fillcolor=lightsteelblue];
+
+    // Task and Execution Tables
+    tasks [label="{tasks|id: BIGINT (PK)\lbot_id: BIGINT (FK)\ljob_name: VARCHAR(100) (FK)\ltask_type: VARCHAR(50)\lstatus: VARCHAR(20)\lcreated_at: TIMESTAMP\lstarted_at: TIMESTAMP\lcompleted_at: TIMESTAMP\lerror_message: TEXT\l}", fillcolor=wheat];
+
+    task_executions [label="{task_executions|id: BIGINT (PK)\ltask_id: BIGINT (FK)\lexecution_time: INTEGER\lmemory_used: INTEGER\lcpu_usage: DECIMAL(5,2)\loutput_log: TEXT\lerror_log: TEXT\l}", fillcolor=wheat];
+
+    // Corpus and File Management
+    corpus_files [label="{corpus_files|id: BIGINT (PK)\ljob_name: VARCHAR(100) (FK)\lfile_path: VARCHAR(500)\lfile_size: BIGINT\lchecksum: VARCHAR(64)\lcreated_at: TIMESTAMP\l}", fillcolor=lavender];
+
+    file_metadata [label="{file_metadata|id: BIGINT (PK)\lfile_key: VARCHAR(255) UNIQUE\lfile_type: VARCHAR(50)\lfile_size: BIGINT\lchecksum: VARCHAR(64)\lstorage_path: VARCHAR(500)\lcreated_at: TIMESTAMP\l}", fillcolor=lavender];
+
+    // Statistics and Metrics
+    fuzzer_stats [label="{fuzzer_stats|id: BIGINT (PK)\lfuzzer_id: BIGINT (FK)\ljob_name: VARCHAR(100) (FK)\lexecs_per_sec: DECIMAL(10,2)\ledge_coverage: DECIMAL(5,2)\lfeature_coverage: DECIMAL(5,2)\lcrashes_found: INTEGER\ltimeouts_found: INTEGER\ldate: DATE\l}", fillcolor=mistyrose];
+
+    job_stats [label="{job_stats|id: BIGINT (PK)\ljob_name: VARCHAR(100) (FK)\ltotal_executions: BIGINT\lcrashes_found: INTEGER\lunique_crashes: INTEGER\lcoverage_percentage: DECIMAL(5,2)\lavg_exec_time: DECIMAL(10,3)\ldate: DATE\l}", fillcolor=mistyrose];
+
+    // Primary Key Relationships
+    testcases -> jobs [label="job_type → name", color=red, penwidth=2];
+    testcases -> fuzzers [label="fuzzer_name → name", color=red, penwidth=2];
+    crash_results -> testcases [label="testcase_id → id", color=red, penwidth=2];
+    coverage_info -> jobs [label="job_name → name", color=red, penwidth=2];
+    issues -> testcases [label="testcase_id → id", color=red, penwidth=2];
+    build_info -> jobs [label="job_name → name", color=red, penwidth=2];
+    tasks -> bots [label="bot_id → id", color=red, penwidth=2];
+    tasks -> jobs [label="job_name → name", color=red, penwidth=2];
+    task_executions -> tasks [label="task_id → id", color=red, penwidth=2];
+    corpus_files -> jobs [label="job_name → name", color=red, penwidth=2];
+    fuzzer_stats -> fuzzers [label="fuzzer_id → id", color=red, penwidth=2];
+    fuzzer_stats -> jobs [label="job_name → name", color=red, penwidth=2];
+    job_stats -> jobs [label="job_name → name", color=red, penwidth=2];
+
+    // Indexes (shown as dotted lines)
+    subgraph cluster_indexes {
+        label="Database Indexes";
+        style=filled;
+        color=white;
+        
+        idx1 [label="idx_testcases_status", shape=ellipse, fillcolor=white];
+        idx2 [label="idx_testcases_timestamp", shape=ellipse, fillcolor=white];
+        idx3 [label="idx_testcases_job_type", shape=ellipse, fillcolor=white];
+        idx4 [label="idx_testcases_security_flag", shape=ellipse, fillcolor=white];
+        idx5 [label="idx_bots_status", shape=ellipse, fillcolor=white];
+        idx6 [label="idx_bots_last_heartbeat", shape=ellipse, fillcolor=white];
+        idx7 [label="idx_tasks_status", shape=ellipse, fillcolor=white];
+        idx8 [label="idx_coverage_date", shape=ellipse, fillcolor=white];
+    }
+
+    // Index relationships (dotted)
+    testcases -> idx1 [style=dotted, color=gray];
+    testcases -> idx2 [style=dotted, color=gray];
+    testcases -> idx3 [style=dotted, color=gray];
+    testcases -> idx4 [style=dotted, color=gray];
+    bots -> idx5 [style=dotted, color=gray];
+    bots -> idx6 [style=dotted, color=gray];
+    tasks -> idx7 [style=dotted, color=gray];
+    coverage_info -> idx8 [style=dotted, color=gray];
+
+    // Constraints and Triggers
+    subgraph cluster_constraints {
+        label="Database Constraints";
+        style=filled;
+        color=lightgray;
+        
+        constraints [label="Constraints:\l• UNIQUE(testcases.filename, testcases.job_type)\l• CHECK(bots.status IN ('IDLE', 'WORKING', 'OFFLINE'))\l• CHECK(tasks.status IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED'))\l• FOREIGN KEY constraints with CASCADE DELETE\l• NOT NULL constraints on critical fields\l", shape=note, fillcolor=lightgray];
+    }
+}

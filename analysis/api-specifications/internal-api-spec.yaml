@@ -1,0 +1,739 @@
+openapi: 3.0.3
+info:
+  title: ClusterFuzz Internal API
+  description: Internal service-to-service communication APIs
+  version: 1.0.0
+
+servers:
+  - url: http://internal.clusterfuzz.local/api/internal
+    description: Internal service mesh
+
+security:
+  - ServiceAuth: []
+
+paths:
+  # Bot-to-Core Communication
+  /bot/register:
+    post:
+      tags: [Bot Communication]
+      summary: Register bot with core system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotRegistrationRequest'
+      responses:
+        '200':
+          description: Bot registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotRegistrationResponse'
+
+  /bot/{botId}/task/request:
+    post:
+      tags: [Bot Communication]
+      summary: Request new task for bot
+      parameters:
+        - name: botId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '200':
+          description: Task assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskAssignment'
+        '204':
+          description: No tasks available
+
+  /bot/{botId}/task/{taskId}/complete:
+    post:
+      tags: [Bot Communication]
+      summary: Report task completion
+      parameters:
+        - name: botId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionReport'
+      responses:
+        '200':
+          description: Task completion recorded
+
+  /bot/{botId}/heartbeat:
+    post:
+      tags: [Bot Communication]
+      summary: Bot heartbeat (internal)
+      parameters:
+        - name: botId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalHeartbeat'
+      responses:
+        '200':
+          description: Heartbeat acknowledged
+
+  # Analysis Engine Communication
+  /analysis/crash/analyze:
+    post:
+      tags: [Analysis Engine]
+      summary: Analyze crash for testcase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrashAnalysisRequest'
+      responses:
+        '200':
+          description: Analysis completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrashAnalysisResult'
+
+  /analysis/crash/compare:
+    post:
+      tags: [Analysis Engine]
+      summary: Compare crashes for deduplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrashComparisonRequest'
+      responses:
+        '200':
+          description: Comparison completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrashComparisonResult'
+
+  /analysis/minimize:
+    post:
+      tags: [Analysis Engine]
+      summary: Minimize testcase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MinimizationRequest'
+      responses:
+        '200':
+          description: Minimization started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimizationResponse'
+
+  # Fuzzing Engine Communication
+  /fuzzing/engine/select:
+    post:
+      tags: [Fuzzing Engine]
+      summary: Select appropriate fuzzing engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EngineSelectionRequest'
+      responses:
+        '200':
+          description: Engine selected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngineSelectionResponse'
+
+  /fuzzing/corpus/sync:
+    post:
+      tags: [Fuzzing Engine]
+      summary: Synchronize corpus between bots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusSyncRequest'
+      responses:
+        '200':
+          description: Corpus synchronized
+
+  /fuzzing/stats/report:
+    post:
+      tags: [Fuzzing Engine]
+      summary: Report fuzzing statistics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FuzzingStatsReport'
+      responses:
+        '200':
+          description: Statistics recorded
+
+  # Storage Service Communication
+  /storage/upload:
+    post:
+      tags: [Storage Service]
+      summary: Upload file to storage
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: string
+      responses:
+        '200':
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageUploadResponse'
+
+  /storage/download/{fileKey}:
+    get:
+      tags: [Storage Service]
+      summary: Download file from storage
+      parameters:
+        - name: fileKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /storage/metadata/{fileKey}:
+    get:
+      tags: [Storage Service]
+      summary: Get file metadata
+      parameters:
+        - name: fileKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+
+  # Configuration Service
+  /config/get:
+    post:
+      tags: [Configuration]
+      summary: Get configuration values
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigRequest'
+      responses:
+        '200':
+          description: Configuration values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+
+  /config/update:
+    post:
+      tags: [Configuration]
+      summary: Update configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigUpdateRequest'
+      responses:
+        '200':
+          description: Configuration updated
+
+  # Metrics and Monitoring
+  /metrics/collect:
+    post:
+      tags: [Metrics]
+      summary: Collect system metrics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetricsCollection'
+      responses:
+        '200':
+          description: Metrics recorded
+
+  /health/check:
+    get:
+      tags: [Health]
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  securitySchemes:
+    ServiceAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Bot Communication Schemas
+    BotRegistrationRequest:
+      type: object
+      required: [name, platform, capabilities]
+      properties:
+        name:
+          type: string
+        platform:
+          type: string
+        version:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        systemInfo:
+          $ref: '#/components/schemas/SystemInfo'
+
+    BotRegistrationResponse:
+      type: object
+      properties:
+        botId:
+          type: string
+        authToken:
+          type: string
+        configurationEndpoint:
+          type: string
+
+    TaskRequest:
+      type: object
+      properties:
+        capabilities:
+          type: array
+          items:
+            type: string
+        currentLoad:
+          type: number
+        availableResources:
+          $ref: '#/components/schemas/ResourceInfo'
+
+    TaskAssignment:
+      type: object
+      properties:
+        taskId:
+          type: string
+        taskType:
+          type: string
+          enum: [FUZZ, MINIMIZE, ANALYZE, CORPUS_PRUNE]
+        jobName:
+          type: string
+        parameters:
+          type: object
+        deadline:
+          type: string
+          format: date-time
+
+    TaskCompletionReport:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [COMPLETED, FAILED, TIMEOUT]
+        results:
+          type: object
+        executionTime:
+          type: integer
+        resourceUsage:
+          $ref: '#/components/schemas/ResourceUsage'
+        errorMessage:
+          type: string
+
+    InternalHeartbeat:
+      type: object
+      properties:
+        status:
+          type: string
+        currentTasks:
+          type: array
+          items:
+            type: string
+        systemMetrics:
+          $ref: '#/components/schemas/SystemMetrics'
+
+    # Analysis Engine Schemas
+    CrashAnalysisRequest:
+      type: object
+      required: [testcaseId, stacktrace]
+      properties:
+        testcaseId:
+          type: integer
+          format: int64
+        stacktrace:
+          type: string
+        binaryPath:
+          type: string
+        symbolsPath:
+          type: string
+        platform:
+          type: string
+
+    CrashAnalysisResult:
+      type: object
+      properties:
+        crashType:
+          type: string
+        crashState:
+          type: string
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        securityFlag:
+          type: boolean
+        reproducible:
+          type: boolean
+        stackFrames:
+          type: array
+          items:
+            $ref: '#/components/schemas/StackFrame'
+
+    CrashComparisonRequest:
+      type: object
+      required: [crash1, crash2]
+      properties:
+        crash1:
+          $ref: '#/components/schemas/CrashSignature'
+        crash2:
+          $ref: '#/components/schemas/CrashSignature'
+
+    CrashComparisonResult:
+      type: object
+      properties:
+        similarity:
+          type: number
+          minimum: 0
+          maximum: 1
+        isDuplicate:
+          type: boolean
+        differences:
+          type: array
+          items:
+            type: string
+
+    MinimizationRequest:
+      type: object
+      required: [testcaseId, originalFile]
+      properties:
+        testcaseId:
+          type: integer
+          format: int64
+        originalFile:
+          type: string
+        jobName:
+          type: string
+        fuzzerName:
+          type: string
+
+    MinimizationResponse:
+      type: object
+      properties:
+        minimizationId:
+          type: string
+        estimatedTime:
+          type: integer
+        status:
+          type: string
+
+    # Fuzzing Engine Schemas
+    EngineSelectionRequest:
+      type: object
+      required: [jobName, platform]
+      properties:
+        jobName:
+          type: string
+        platform:
+          type: string
+        targetType:
+          type: string
+        preferences:
+          type: object
+
+    EngineSelectionResponse:
+      type: object
+      properties:
+        selectedEngine:
+          type: string
+        configuration:
+          type: object
+        reason:
+          type: string
+
+    CorpusSyncRequest:
+      type: object
+      required: [jobName, botId]
+      properties:
+        jobName:
+          type: string
+        botId:
+          type: string
+        localCorpusSize:
+          type: integer
+        lastSyncTime:
+          type: string
+          format: date-time
+
+    FuzzingStatsReport:
+      type: object
+      required: [botId, jobName, stats]
+      properties:
+        botId:
+          type: string
+        jobName:
+          type: string
+        fuzzerName:
+          type: string
+        stats:
+          $ref: '#/components/schemas/FuzzingStatistics'
+
+    # Storage Schemas
+    StorageUploadResponse:
+      type: object
+      properties:
+        fileKey:
+          type: string
+        url:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    FileMetadata:
+      type: object
+      properties:
+        fileKey:
+          type: string
+        fileName:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        checksum:
+          type: string
+        uploadTime:
+          type: string
+          format: date-time
+
+    # Configuration Schemas
+    ConfigRequest:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+        context:
+          type: object
+
+    ConfigResponse:
+      type: object
+      properties:
+        values:
+          type: object
+        version:
+          type: string
+
+    ConfigUpdateRequest:
+      type: object
+      required: [updates]
+      properties:
+        updates:
+          type: object
+        reason:
+          type: string
+
+    # Supporting Schemas
+    SystemInfo:
+      type: object
+      properties:
+        os:
+          type: string
+        architecture:
+          type: string
+        cpuCores:
+          type: integer
+        memoryMb:
+          type: integer
+        diskSpaceMb:
+          type: integer
+
+    ResourceInfo:
+      type: object
+      properties:
+        cpuUsage:
+          type: number
+        memoryUsage:
+          type: number
+        diskUsage:
+          type: number
+
+    ResourceUsage:
+      type: object
+      properties:
+        peakMemoryMb:
+          type: integer
+        avgCpuUsage:
+          type: number
+        diskIoMb:
+          type: integer
+
+    SystemMetrics:
+      type: object
+      properties:
+        cpuUsage:
+          type: number
+        memoryUsage:
+          type: number
+        diskUsage:
+          type: number
+        networkIo:
+          type: object
+
+    StackFrame:
+      type: object
+      properties:
+        function:
+          type: string
+        file:
+          type: string
+        line:
+          type: integer
+        address:
+          type: string
+
+    CrashSignature:
+      type: object
+      properties:
+        crashType:
+          type: string
+        crashState:
+          type: string
+        topFrames:
+          type: array
+          items:
+            type: string
+
+    FuzzingStatistics:
+      type: object
+      properties:
+        execsPerSec:
+          type: number
+        totalExecs:
+          type: integer
+          format: int64
+        edgeCoverage:
+          type: number
+        featureCoverage:
+          type: number
+        crashesFound:
+          type: integer
+        timeoutsFound:
+          type: integer
+
+    MetricsCollection:
+      type: object
+      properties:
+        source:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metrics:
+          type: object
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, DEGRADED]
+        components:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: Bot Communication
+    description: Bot-to-core service communication
+  - name: Analysis Engine
+    description: Crash analysis and processing
+  - name: Fuzzing Engine
+    description: Fuzzing coordination and management
+  - name: Storage Service
+    description: File storage and retrieval
+  - name: Configuration
+    description: Configuration management
+  - name: Metrics
+    description: Metrics collection and monitoring
+  - name: Health
+    description: Service health monitoring
