@@ -1,0 +1,92 @@
+clusterfuzz:
+  security:
+    # OAuth2 Configuration
+    oauth2:
+      enabled: true
+      google:
+        client-id: ${GOOGLE_OAUTH2_CLIENT_ID:}
+        client-secret: ${GOOGLE_OAUTH2_CLIENT_SECRET:}
+        hosted-domain: ${GOOGLE_OAUTH2_HOSTED_DOMAIN:}
+        restrict-to-domain: ${GOOGLE_OAUTH2_RESTRICT_DOMAIN:false}
+      github:
+        client-id: ${GITHUB_OAUTH2_CLIENT_ID:}
+        client-secret: ${GITHUB_OAUTH2_CLIENT_SECRET:}
+        organization: ${GITHUB_OAUTH2_ORGANIZATION:}
+        restrict-to-organization: ${GITHUB_OAUTH2_RESTRICT_ORG:false}
+    
+    # JWT Configuration
+    jwt:
+      secret-key: ${JWT_SECRET_KEY:clusterfuzz-default-secret-key-change-in-production-environment}
+      expiration-time: ${JWT_EXPIRATION_TIME:3600}
+      refresh-expiration-time: ${JWT_REFRESH_EXPIRATION_TIME:86400}
+    
+    # Firebase Configuration
+    firebase:
+      enabled: ${FIREBASE_ENABLED:false}
+      project-id: ${FIREBASE_PROJECT_ID:}
+      service-account-key-path: ${FIREBASE_SERVICE_ACCOUNT_KEY_PATH:}
+    
+    # Google Cloud Platform Configuration
+    gcp:
+      enabled: ${GCP_SECURITY_ENABLED:true}
+      project-id: ${GCP_PROJECT_ID:}
+      service-account-key-path: ${GCP_SERVICE_ACCOUNT_KEY_PATH:}
+      iam:
+        sync-roles: ${GCP_IAM_SYNC_ROLES:true}
+        sync-permissions: ${GCP_IAM_SYNC_PERMISSIONS:true}
+        role-prefix: ${GCP_IAM_ROLE_PREFIX:clusterfuzz-}
+        sync-interval-minutes: ${GCP_IAM_SYNC_INTERVAL:60}
+    
+    # User Synchronization Configuration
+    sync:
+      interval: ${USER_SYNC_INTERVAL:3600000} # 1 hour in milliseconds
+      iam:
+        sync-interval: ${IAM_SYNC_INTERVAL:3600000} # 1 hour in milliseconds
+      cleanup:
+        cron: ${USER_CLEANUP_CRON:0 0 2 * * ?} # 2 AM daily
+        inactive-days: ${USER_CLEANUP_INACTIVE_DAYS:90}
+
+# Spring Security Configuration
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_OAUTH2_CLIENT_ID:}
+            client-secret: ${GOOGLE_OAUTH2_CLIENT_SECRET:}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/api/v1/auth/oauth2/callback/{registrationId}"
+          github:
+            client-id: ${GITHUB_OAUTH2_CLIENT_ID:}
+            client-secret: ${GITHUB_OAUTH2_CLIENT_SECRET:}
+            scope:
+              - read:user
+              - user:email
+            redirect-uri: "{baseUrl}/api/v1/auth/oauth2/callback/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
+
+# Logging Configuration for Security
+logging:
+  level:
+    com.google.clusterfuzz.core.security: DEBUG
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG
+    com.google.firebase: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{user}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{user}] %logger{36} - %msg%n"
