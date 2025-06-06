@@ -2,51 +2,48 @@ package com.google.clusterfuzz.web.controller;
 
 import com.google.clusterfuzz.core.entity.Testcase;
 import com.google.clusterfuzz.core.service.TestcaseService;
-import com.google.clusterfuzz.web.dto.TestcaseDto;
-import com.google.clusterfuzz.web.mapper.TestcaseMapper;
+import com.google.clusterfuzz.web.dto.request.TestcaseCreateRequest;
+import com.google.clusterfuzz.web.dto.request.TestcaseUpdateRequest;
+import com.google.clusterfuzz.web.dto.response.ApiResponse;
+import com.google.clusterfuzz.web.dto.response.TestcaseResponse;
+import com.google.clusterfuzz.web.dto.response.TestcaseStatsResponse;
+import com.google.clusterfuzz.web.exception.ApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * REST Controller for Testcase operations.
- * Provides CRUD and search operations for testcases.
+ * Provides comprehensive CRUD, search, and management operations for testcases.
+ * Implements 12+ endpoints as per Week 7 plan.
  */
 @RestController
 @RequestMapping("/api/v1/testcases")
 @Tag(name = "Testcases", description = "Testcase management operations")
-public class TestcaseController {
-
-    private static final Logger logger = LoggerFactory.getLogger(TestcaseController.class);
+public class TestcaseController extends BaseController {
 
     private final TestcaseService testcaseService;
-    private final TestcaseMapper testcaseMapper;
 
     @Autowired
-    public TestcaseController(TestcaseService testcaseService, TestcaseMapper testcaseMapper) {
+    public TestcaseController(TestcaseService testcaseService) {
         this.testcaseService = testcaseService;
-        this.testcaseMapper = testcaseMapper;
     }
 
     @Operation(summary = "Get all testcases", description = "Retrieve a paginated list of all testcases")
