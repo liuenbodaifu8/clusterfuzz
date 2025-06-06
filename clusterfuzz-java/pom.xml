@@ -44,6 +44,10 @@
         <module>clusterfuzz-core</module>
         <module>clusterfuzz-web</module>
         <module>clusterfuzz-bot</module>
+        <module>clusterfuzz-analysis</module>
+        <module>clusterfuzz-fuzzing</module>
+        <module>clusterfuzz-platform</module>
+        <module>clusterfuzz-integration</module>
         <module>clusterfuzz-benchmarks</module>
     </modules>
 
