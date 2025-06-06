@@ -1,0 +1,164 @@
+# ClusterFuzz GraphQL Schema
+# Provides optimized queries for testcase and bot management
+
+scalar DateTime
+scalar Long
+
+type Query {
+    # Testcase queries
+    testcase(id: Long!): Testcase
+    testcases(
+        status: String,
+        jobType: String,
+        securityFlag: Boolean,
+        limit: Int = 50
+    ): [Testcase!]!
+    
+    recentTestcases(
+        days: Int = 7,
+        securityOnly: Boolean = false,
+        limit: Int = 100
+    ): [Testcase!]!
+    
+    testcaseStatistics: TestcaseStatistics!
+    
+    # Bot queries
+    bot(name: String!): Bot
+    bots(
+        platform: String,
+        status: BotStatus,
+        limit: Int = 50
+    ): [Bot!]!
+    
+    availableBots: [Bot!]!
+    botStatistics: BotStatistics!
+    
+    # Job queries
+    job(id: Long!): Job
+    jobs(
+        status: JobStatus,
+        platform: String,
+        limit: Int = 50
+    ): [Job!]!
+    
+    activeJobs: [Job!]!
+}
+
+type Testcase {
+    id: Long!
+    filename: String!
+    jobType: String!
+    fuzzerName: String!
+    projectName: String!
+    status: String!
+    crashType: String
+    crashState: String
+    securityFlag: Boolean!
+    reproducible: Boolean!
+    hasMinimizedTestcase: Boolean!
+    timestamp: DateTime!
+    
+    # Computed fields with field-level resolution
+    relatedTestcases: [Testcase!]!
+    similarTestcases: [Testcase!]!
+}
+
+type TestcaseStatistics {
+    total: Long!
+    security: Long!
+    processed: Long!
+    pending: Long!
+}
+
+type Bot {
+    id: Long!
+    name: String!
+    platform: String!
+    version: String!
+    ipAddress: String!
+    port: Int!
+    cpuArchitecture: String!
+    cpuCores: Int!
+    memoryMb: Int!
+    diskSpaceMb: Long!
+    status: BotStatus!
+    lastHeartbeat: DateTime!
+    
+    # Computed fields
+    currentJobs: [Job!]!
+    isHealthy: Boolean!
+    uptime: Long!
+}
+
+enum BotStatus {
+    IDLE
+    WORKING
+    OFFLINE
+    MAINTENANCE
+}
+
+type BotStatistics {
+    total: Long!
+    idle: Long!
+    working: Long!
+    offline: Long!
+    maintenance: Long!
+}
+
+type Job {
+    id: Long!
+    name: String!
+    platform: String!
+    status: JobStatus!
+    priority: Int!
+    createdAt: DateTime!
+    startedAt: DateTime
+    completedAt: DateTime
+    
+    # Relationships
+    bot: Bot
+    testcases: [Testcase!]!
+}
+
+enum JobStatus {
+    PENDING
+    RUNNING
+    COMPLETED
+    FAILED
+    CANCELLED
+}
+
+# Input types for mutations (future extension)
+input TestcaseInput {
+    filename: String!
+    jobType: String!
+    fuzzerName: String!
+    projectName: String!
+    crashType: String
+    crashState: String
+    securityFlag: Boolean = false
+    reproducible: Boolean = false
+}
+
+input BotInput {
+    name: String!
+    platform: String!
+    version: String!
+    ipAddress: String!
+    port: Int!
+    cpuArchitecture: String!
+    cpuCores: Int!
+    memoryMb: Int!
+    diskSpaceMb: Long!
+}
+
+# Future mutations (not implemented yet)
+# type Mutation {
+#     createTestcase(input: TestcaseInput!): Testcase!
+#     updateTestcase(id: Long!, input: TestcaseInput!): Testcase!
+#     deleteTestcase(id: Long!): Boolean!
+#     
+#     registerBot(input: BotInput!): Bot!
+#     updateBot(name: String!, input: BotInput!): Bot!
+#     deregisterBot(name: String!): Boolean!
+# }
