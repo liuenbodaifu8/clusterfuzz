@@ -21,10 +21,12 @@
 | Document | Purpose | Status |
 |----------|---------|--------|
 | [📋 PROJECT_PROGRESS.md](./PROJECT_PROGRESS.md) | **Main progress tracker** - Start here! | ✅ Current |
-| [📊 IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) | **Detailed implementation status** | ✅ Current |
+| [📊 PROGRESS_AGAINST_PLAN.md](./PROGRESS_AGAINST_PLAN.md) | **Original plan vs actual progress** | ✅ Current |
+| [📈 IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) | **Detailed implementation analysis** | ✅ Current |
 | [📖 JAVA_REWRITE_PLAN.md](./JAVA_REWRITE_PLAN.md) | Complete project strategy | ✅ Complete |
 | [📅 TIMELINE.md](./TIMELINE.md) | Detailed 18-month timeline | ✅ Complete |
 | [📄 PROJECT_CHARTER.md](./PROJECT_CHARTER.md) | Formal project charter | ✅ Complete |
+| [📚 DOCUMENTATION_GUIDE.md](./DOCUMENTATION_GUIDE.md) | Documentation structure guide | ✅ Complete |
 
 ## 🎯 Current Phase: Core Development (Month 2)
 
